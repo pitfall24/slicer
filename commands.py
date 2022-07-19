@@ -121,7 +121,7 @@ def step(frames, currentFrame, step=1, display=True):
   :param frames: dictionary of frames
   :param currentFrame: current frame marching from
   :param step: step to march by
-  :param display: boolean of whether to display frame number
+  :param display: boolean of whether to display frame number as text
   :return currentFrame: current frame marching from
   '''
   previousFrame = currentFrame
@@ -130,7 +130,7 @@ def step(frames, currentFrame, step=1, display=True):
   if currentFrame >= len(frames) - 1:
     currentFrame = 0
   
-  setSegmentationVisibility(frames, 0, [previousFrame])
+  setSegmentationVisibility(frames, 0, range(previousFrame, currentFrame))
   setSegmentationVisibility(frames, 1, [currentFrame])
   
   if display:
@@ -152,8 +152,47 @@ def marchSingleFrame(frames, currentFrame, newFrame):
     
   return currentFrame
 
+def marchStepRange(frames, currentFrame, step=1, breadth=1, display=True):
+  '''
+  :param frames: dictionary of frames
+  :param currentFrame: current frame marching from
+  :param step: step to march by
+  :param breadth: viewable range of frames
+  :param display: boolean of whether to display frame number as text
+  :return currentFrame: current frame marching from
+  '''
+  for _ in range(step):
+    if currentFrame >= len(frames) - 1:
+      currentFrame = 0
+      
+    setSegmentationVisibility(frames, 0, [currentFrame])
+    currentFrame += 1
+  
+  for i in range(breadth):
+    setSegmentationVisibility(frames, 1, [(currentFrame + i) % (len(frames) - 1)])
+    
+  if display:
+    print(f'Went from {list(range(currentFrame - step, currentFrame + breadth - 1))} to {list(range(currentFrame, currentFrame + breadth))}')
+  
+  return currentFrame
+
+def viewable(frames):
+  '''
+  :param frames: dictionary of frames
+  '''
+  out = []
+  
+  for frame, value in frames.items():    
+    if value['opacity'] > 0:
+      out.append(frame)
+  
+  if len(out) > 0:  
+    print('Visible frames:', ', '.join(str(i) for i in out))
+  else:
+    print('No visible frames')
+
 # Sample run
-directory = '/Users/pscovel/Documents/data/test_inference/MAP-C513-S'
+directory = '/Users/pscovel/Documents/data/placenta-segmentation/test_inference/MAP-C517-L2'
 
 segmentations = createFrames(directory + '/predicted_segmentation')
 volumes = createFrames(directory + '/volume')
@@ -165,6 +204,12 @@ frames = combineSegmentationsAndVolumes(segmentations, volumes)
 frames = createClosedSurfaceOfSegmentation(frames, namePrefix='ClosedSurface')
 
 currentFrame = prepareMarching(frames)
-# Repeat
-currentFrame = step(frames, currentFrame)
-currentFrame = step(frames, currentFrame)
+viewable(frames)
+
+currentFrame = marchStepRange(frames, currentFrame, breadth=2, display=True)
+currentFrame = marchStepRange(frames, currentFrame, breadth=2, display=True)
+currentFrame = marchStepRange(frames, currentFrame, breadth=2, display=True)
+viewable(frames)
+
+setAllSegmentationVisibility(frames, 1)
+#etc...
