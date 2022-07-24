@@ -21,6 +21,7 @@ pos = [i // 2 for i in dimension]
 vminmax = volumes.minmax()
 sminmax = segmentations.minmax()
 stoggle = True
+outline = False
 sopacity = 0.3
 frame = 0
 scale = 3
@@ -38,10 +39,6 @@ zbox = [[500, 0]]
 xbox.append([xbox[0][0] + dimension[1] * scale, xbox[0][1] + dimension[2] * scale])
 ybox.append([ybox[0][0] + dimension[0] * scale, ybox[0][1] + dimension[2] * scale])
 zbox.append([zbox[0][0] + dimension[0] * scale, zbox[0][1] + dimension[1] * scale])
-
-print(xbox)
-print(ybox)
-print(zbox)
 
 clicked = False
 scroll = 0
@@ -75,6 +72,8 @@ while running:
             if event.key == pg.K_e and stoggle:
                 if sopacity <= 0.95:
                     sopacity = round(sopacity + 0.05, 2)
+            if event.key == pg.K_o:
+                outline = not outline
 
     keys = pg.key.get_pressed()
     if keys[pg.K_UP]:
@@ -115,9 +114,9 @@ while running:
     vdataY, sdataY = volumes.slice(frame, pos[1], axis=1), segmentations.slice(frame, pos[1], axis=1)
     vdataZ, sdataZ = volumes.slice(frame, pos[2], axis=2), segmentations.slice(frame, pos[2], axis=2)
 
-    dataX = gray(vdataX) * (1 - sopacity) + color(sdataX, scolor) * sopacity * int(stoggle)
-    dataY = gray(vdataY) * (1 - sopacity) + color(sdataY, scolor) * sopacity * int(stoggle)
-    dataZ = gray(vdataZ) * (1 - sopacity) + color(sdataZ, scolor) * sopacity * int(stoggle)
+    dataX = gray(vdataX) * (1 - sopacity) + color(get_edges(sdataX, outline), scolor) * sopacity * int(stoggle)
+    dataY = gray(vdataY) * (1 - sopacity) + color(get_edges(sdataY, outline), scolor) * sopacity * int(stoggle)
+    dataZ = gray(vdataZ) * (1 - sopacity) + color(get_edges(sdataZ, outline), scolor) * sopacity * int(stoggle)
 
     xview = pg.transform.scale(pg.surfarray.make_surface(dataX), (dimension[1] * scale, dimension[2] * scale))
     yview = pg.transform.scale(pg.surfarray.make_surface(dataY), (dimension[0] * scale, dimension[2] * scale))

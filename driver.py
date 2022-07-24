@@ -1,10 +1,9 @@
+import cv2
 import os
 import nibabel as nib
-import pygame as pg
 import numpy as np
 from PIL import Image
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
+import pygame as pg
 
 class ImageSet():
     def __init__(self, path, *args, **kwargs):
@@ -55,3 +54,16 @@ def color(image, color):
     ret[:, :, 2] = ((ret[:, :, 2].astype(np.float32) * color[2]) / 255).astype(np.uint8)
     
     return ret
+
+def get_edges(mask, toggle):
+    if not toggle:
+        return mask
+    
+    contours, _ = cv2.findContours(mask.astype(np.uint8), cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    out = np.zeros(mask.shape, dtype=np.uint8)
+    
+    for i in contours:
+        for j in i:
+            out[j[0][1], j[0][0]] = 255
+    
+    return out
